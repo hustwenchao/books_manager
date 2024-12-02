@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GITHUB_SECRET || "",
       authorization: {
         params: {
-          redirect_uri: `${authConfig.callbackUrl}/github`,
+          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/github`,
         },
       },
     }),
@@ -43,7 +43,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_SECRET || "",
       authorization: {
         params: {
-          redirect_uri: `${authConfig.callbackUrl}/google`,
+          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/google`,
           prompt: "consent",
           access_type: "offline",
           response_type: "code",
