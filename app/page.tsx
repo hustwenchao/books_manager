@@ -183,23 +183,19 @@ export default function Home() {
 
   const handleEdit = (book: Book) => {
     setEditingBook(book._id);
-    setEditForm(book);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingBook(null);
     setEditForm({
-      _id: '',
-      cn_name: '',
-      en_name: '',
-      author: '',
-      cn_douban_link: '',
-      en_douban_link: '',
-      author_cn_name: '',
-      author_wiki_link: '',
-      created_at: ''
+      _id: book._id || '',
+      cn_name: book.cn_name || '',
+      en_name: book.en_name || '',
+      author: book.author || '',
+      cn_douban_link: book.cn_douban_link || '',
+      en_douban_link: book.en_douban_link || '',
+      author_cn_name: book.author_cn_name || '',
+      author_wiki_link: book.author_wiki_link || '',
+      created_at: book.created_at || ''
     });
   };
+
 
   const handleSaveEdit = async (bookId: string) => {
     if (!editForm.cn_name.trim() && !editForm.en_name.trim()) {
@@ -208,14 +204,15 @@ export default function Home() {
     }
 
     try {
+      const { _id, ...editFormWithoutId } = editForm;
       const response = await fetch('/api/books/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          _id: bookId,
-          ...editForm
+          _id: _id,
+          ...editFormWithoutId
         }),
       });
 
@@ -229,7 +226,7 @@ export default function Home() {
       setSearchResults(prevResults =>
         prevResults.map(book =>
           book._id === bookId
-            ? { ...book, ...editForm }
+            ? { ...book, ...editFormWithoutId }
             : book
         )
       );
