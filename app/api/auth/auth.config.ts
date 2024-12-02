@@ -1,5 +1,5 @@
 import { NextAuthOptions } from "next-auth"
-import GithubProvider from "next-auth/providers/github"
+import GithubProvider, { GithubProfile } from "next-auth/providers/github"
 import GoogleProvider from "next-auth/providers/google"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "../../../lib/mongodb"
@@ -35,6 +35,14 @@ export const authOptions: NextAuthOptions = {
         params: {
           scope: 'read:user user:email'
         }
+      },
+      profile(profile: GithubProfile) {
+        return {
+          id: profile.id.toString(),
+          name: profile.name || profile.login,
+          email: profile.email,
+          image: profile.avatar_url
+        }
       }
     }),
     GoogleProvider({
@@ -53,10 +61,6 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  pages: {
-    signIn: '/auth/signin',
-    error: '/auth/error',
-  },
   callbacks: {
     async signIn({ user }) {
       if (!user?.email) {
@@ -64,10 +68,10 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, account, profile }) {
-      if (account) {
+    async jwt({ token, account, user }) {
+      if (account && user) {
         token.accessToken = account.access_token
-        token.userId = profile?.id
+        token.userId = user.id
       }
       return token
     },
@@ -79,4 +83,8 @@ export const authOptions: NextAuthOptions = {
       return session
     }
   },
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error'
+  }
 };
