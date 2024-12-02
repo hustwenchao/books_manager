@@ -37,10 +37,9 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_SECRET || "",
       authorization: {
         params: {
-          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/google`,
           prompt: "consent",
           access_type: "offline",
-          response_type: "code",
+          response_type: "code"
         },
       },
     }),
@@ -48,6 +47,10 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
   },
   callbacks: {
     async signIn({ user }) {
@@ -70,9 +73,5 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-  },
-  pages: {
-    signIn: '/auth/signin',
-    error: '/auth/error',
   },
 };
