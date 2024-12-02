@@ -3,22 +3,25 @@ import GithubProvider from "next-auth/providers/github"
 import GoogleProvider from "next-auth/providers/google"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "../../../lib/mongodb"
-import { Session } from "next-auth"
-import { JWT } from "next-auth/jwt"
+import { authConfig } from "../../../lib/auth-config"
 
-interface ExtendedSession extends Session {
-  accessToken?: string
-  user: {
-    id: string
-    name?: string | null
-    email?: string | null
-    image?: string | null
+declare module "next-auth" {
+  interface Session {
+    accessToken?: string;
+    user: {
+      id: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    }
   }
 }
 
-interface ExtendedToken extends JWT {
-  accessToken?: string
-  userId?: string
+declare module "next-auth/jwt" {
+  interface JWT {
+    accessToken?: string;
+    userId?: string;
+  }
 }
 
 export const authOptions: NextAuthOptions = {
@@ -28,10 +31,23 @@ export const authOptions: NextAuthOptions = {
     GithubProvider({
       clientId: process.env.GITHUB_ID || "",
       clientSecret: process.env.GITHUB_SECRET || "",
+      authorization: {
+        params: {
+          redirect_uri: `${authConfig.callbackUrl}/github`,
+        },
+      },
     }),
     GoogleProvider({
       clientId: process.env.GOOGLE_ID || "",
       clientSecret: process.env.GOOGLE_SECRET || "",
+      authorization: {
+        params: {
+          redirect_uri: `${authConfig.callbackUrl}/google`,
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
     }),
   ],
   session: {
@@ -39,28 +55,22 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user, account }): Promise<ExtendedToken> {
-      if (account && user) {
-        return {
-          ...token,
-          accessToken: account.access_token,
-          userId: user.id,
-        }
+    jwt({ token, user, account }) {
+      if (account) {
+        token.accessToken = account.access_token;
+        token.userId = user?.id;
       }
-      return token
+      return token;
     },
-    async session({ session, token }): Promise<ExtendedSession> {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.userId as string
-        },
-        accessToken: token.accessToken as string
+    session({ session, token }) {
+      if (session.user) {
+        session.accessToken = token.accessToken;
+        session.user.id = token.userId as string;
       }
+      return session;
     },
   },
   pages: {
     signIn: '/auth/signin',
   },
-}
+};
