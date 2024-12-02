@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 interface BookFormData {
@@ -17,6 +17,10 @@ interface BookFormData {
 interface Book extends BookFormData {
   _id: string;
   created_at: string;
+}
+
+interface DuplicateBook extends Book {
+  similarity: number;
 }
 
 export default function Home() {
@@ -54,8 +58,7 @@ export default function Home() {
     created_at: ''
   });
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addBookError, setAddBookError] = useState('');
-  const [duplicateBooks, setDuplicateBooks] = useState<any[]>([]);
+  const [duplicateBooks, setDuplicateBooks] = useState<DuplicateBook[]>([]);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [totalBooks, setTotalBooks] = useState<number>(0);
 
@@ -131,11 +134,11 @@ export default function Home() {
 
   const handleAddBook = async (e: React.FormEvent, forceAdd: boolean = false) => {
     e.preventDefault();
-    setAddBookError('');
+    setError('');
     setDuplicateBooks([]);
 
     if (!bookForm.cn_name.trim() && !bookForm.en_name.trim()) {
-      setAddBookError('Please fill in either Chinese or English name');
+      setError('Please fill in either Chinese or English name');
       return;
     }
 
@@ -177,7 +180,7 @@ export default function Home() {
       // Refresh total count
       fetchTotalCount();
     } catch (err) {
-      setAddBookError(err instanceof Error ? err.message : 'Failed to add book');
+      setError(err instanceof Error ? err.message : 'Failed to add book');
     }
   };
 
@@ -195,7 +198,6 @@ export default function Home() {
       created_at: book.created_at || ''
     });
   };
-
 
   const handleSaveEdit = async (bookId: string) => {
     if (!editForm.cn_name.trim() && !editForm.en_name.trim()) {
@@ -304,9 +306,9 @@ export default function Home() {
                         <div className="space-y-6">
                           {/* Basic Book Information */}
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl space-y-4 border border-gray-100 dark:border-gray-600">
-                            <h4 className="text-lg font-medium text-gray-900 mb-3 dark:text-white">Book Information</h4>
+                            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Book Information</h4>
                             <div>
-                              <label htmlFor="cn_name" className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-200">
+                              <label htmlFor="cn_name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                 Chinese Name
                               </label>
                               <input
@@ -314,12 +316,12 @@ export default function Home() {
                                 id="cn_name"
                                 value={editForm.cn_name}
                                 onChange={(e) => setEditForm(prev => ({ ...prev, cn_name: e.target.value }))}
-                                className="w-full px-4 py-2 rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out dark:bg-gray-700 dark:text-white"
                                 placeholder="输入中文书名"
                               />
                             </div>
                             <div>
-                              <label htmlFor="en_name" className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-200">
+                              <label htmlFor="en_name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                 English Name
                               </label>
                               <input
@@ -327,7 +329,7 @@ export default function Home() {
                                 id="en_name"
                                 value={editForm.en_name}
                                 onChange={(e) => setEditForm(prev => ({ ...prev, en_name: e.target.value }))}
-                                className="w-full px-4 py-2 rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out dark:bg-gray-700 dark:text-white"
                                 placeholder="Enter English book name"
                               />
                             </div>
@@ -335,9 +337,9 @@ export default function Home() {
 
                           {/* Author Information Section */}
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl space-y-4 border border-gray-100 dark:border-gray-600">
-                            <h4 className="text-lg font-medium text-gray-900 mb-3 dark:text-white">Author Information</h4>
+                            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Author Information</h4>
                             <div>
-                              <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-200">
+                              <label htmlFor="author" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                 Author Name
                               </label>
                               <input
@@ -345,12 +347,12 @@ export default function Home() {
                                 id="author"
                                 value={editForm.author}
                                 onChange={(e) => setEditForm(prev => ({ ...prev, author: e.target.value }))}
-                                className="w-full px-4 py-2 rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out dark:bg-gray-700 dark:text-white"
                                 placeholder="Enter author's name"
                               />
                             </div>
                             <div>
-                              <label htmlFor="author_cn_name" className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-200">
+                              <label htmlFor="author_cn_name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                 Author Chinese Name
                               </label>
                               <input
@@ -358,19 +360,19 @@ export default function Home() {
                                 id="author_cn_name"
                                 value={editForm.author_cn_name}
                                 onChange={(e) => setEditForm(prev => ({ ...prev, author_cn_name: e.target.value }))}
-                                className="w-full px-4 py-2 rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out dark:bg-gray-700 dark:text-white"
                                 placeholder="输入作者中文名"
                               />
                             </div>
                             <div>
-                              <label htmlFor="author_wiki_link" className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-200">
+                              <label htmlFor="author_wiki_link" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                 Author Introduction Link
                               </label>
                               <textarea
                                 id="author_wiki_link"
                                 value={editForm.author_wiki_link}
                                 onChange={(e) => setEditForm(prev => ({ ...prev, author_wiki_link: e.target.value }))}
-                                className="w-full px-4 py-2 rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out resize-y min-h-[100px] dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out resize-y min-h-[100px] dark:bg-gray-700 dark:text-white"
                                 placeholder="Enter author introduction link or description..."
                               />
                             </div>
@@ -378,9 +380,9 @@ export default function Home() {
 
                           {/* Book Links Section */}
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl space-y-4 border border-gray-100 dark:border-gray-600">
-                            <h4 className="text-lg font-medium text-gray-900 mb-3 dark:text-white">Book Links</h4>
+                            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Book Links</h4>
                             <div>
-                              <label htmlFor="cn_douban_link" className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-200">
+                              <label htmlFor="cn_douban_link" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                 Chinese Book Douban Link
                               </label>
                               <input
@@ -388,12 +390,12 @@ export default function Home() {
                                 id="cn_douban_link"
                                 value={editForm.cn_douban_link}
                                 onChange={(e) => setEditForm(prev => ({ ...prev, cn_douban_link: e.target.value }))}
-                                className="w-full px-4 py-2 rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out dark:bg-gray-700 dark:text-white"
                                 placeholder="https://book.douban.com/..."
                               />
                             </div>
                             <div>
-                              <label htmlFor="en_douban_link" className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-200">
+                              <label htmlFor="en_douban_link" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                 English Book Douban Link
                               </label>
                               <input
@@ -401,7 +403,7 @@ export default function Home() {
                                 id="en_douban_link"
                                 value={editForm.en_douban_link}
                                 onChange={(e) => setEditForm(prev => ({ ...prev, en_douban_link: e.target.value }))}
-                                className="w-full px-4 py-2 rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out dark:bg-gray-700 dark:text-white"
                                 placeholder="https://book.douban.com/..."
                               />
                             </div>

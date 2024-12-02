@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 import './globals.css'
 import { Inter } from 'next/font/google'
 import { getServerSession } from "next-auth/next"
-import { authOptions } from "./api/auth/[...nextauth]/route"
+import { authOptions } from "./api/auth/auth.config"
 import { Providers } from "./providers";
 import Navbar from './components/Navbar'
 
@@ -38,7 +38,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${inter.className} antialiased bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`}
       >
         <Providers>
-          <Navbar />
+          <Navbar session={session} />
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {children}
           </main>

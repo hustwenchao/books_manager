@@ -2,27 +2,28 @@ import fs from 'fs';
 import path from 'path';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import matter from 'gray-matter';
+import type { MDXComponents } from 'mdx/types';
 
-const components = {
-  h1: ({ children }: { children: React.ReactNode }) => (
+const components: MDXComponents = {
+  h1: ({ children }) => (
     <h1 className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">{children}</h1>
   ),
-  h2: ({ children }: { children: React.ReactNode }) => (
+  h2: ({ children }) => (
     <h2 className="text-3xl font-semibold mb-4 mt-8 text-gray-800 dark:text-gray-100">{children}</h2>
   ),
-  h3: ({ children }: { children: React.ReactNode }) => (
+  h3: ({ children }) => (
     <h3 className="text-2xl font-semibold mb-3 mt-6 text-gray-800 dark:text-gray-100">{children}</h3>
   ),
-  p: ({ children }: { children: React.ReactNode }) => (
+  p: ({ children }) => (
     <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">{children}</p>
   ),
-  ul: ({ children }: { children: React.ReactNode }) => (
+  ul: ({ children }) => (
     <ul className="list-disc list-inside mb-4 space-y-2 ml-4">{children}</ul>
   ),
-  ol: ({ children }: { children: React.ReactNode }) => (
+  ol: ({ children }) => (
     <ol className="list-decimal list-inside mb-4 space-y-2 ml-4">{children}</ol>
   ),
-  li: ({ children }: { children: React.ReactNode }) => (
+  li: ({ children }) => (
     <li className="text-gray-700 dark:text-gray-300">{children}</li>
   ),
 };

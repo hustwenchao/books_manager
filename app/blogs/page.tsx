@@ -29,7 +29,7 @@ function getBlogPosts(): BlogPost[] {
         excerpt: data.excerpt,
       };
     })
-    .sort((a, b) => (new Date(b.date) as any) - (new Date(a.date) as any));
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return posts;
 }

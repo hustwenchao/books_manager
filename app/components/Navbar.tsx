@@ -5,13 +5,14 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+import type { Session } from 'next-auth';
 import { useSession, signOut } from 'next-auth/react';
 
-export default function Navbar() {
+export default function Navbar({ session }: { session: Session | null }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const { data: session } = useSession();
+  const { data: clientSession } = useSession();
 
   useEffect(() => {
     setMounted(true);
@@ -81,19 +82,19 @@ export default function Navbar() {
               )}
             </button>
 
-            {session ? (
+            {(session || clientSession) ? (
               <div className="flex items-center space-x-2">
-                {session.user?.image && (
+                {(session?.user?.image || clientSession?.user?.image) && (
                   <Image
-                    src={session.user.image || ''}
-                    alt={session.user.name || 'User'}
+                    src={(session?.user?.image || clientSession?.user?.image) || ''}
+                    alt={(session?.user?.name || clientSession?.user?.name) || 'User'}
                     width={32}
                     height={32}
                     className="rounded-full"
                   />
                 )}
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {session.user?.name || session.user?.email}
+                  {(session?.user?.name || clientSession?.user?.name) || (session?.user?.email || clientSession?.user?.email)}
                 </span>
                 <button
                   onClick={() => signOut()}

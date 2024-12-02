@@ -3,6 +3,8 @@ import clientPromise from '../../../../lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { checkAuth } from '../../../../lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function PUT(request: Request) {
     try {
         // Check authentication
