@@ -1,18 +1,20 @@
-import { MongoClient } from 'mongodb'
+import { MongoClient, MongoClientOptions } from 'mongodb'
 
 if (!process.env.MONGODB_URI) {
   throw new Error('Invalid/Missing environment variable: "MONGODB_URI"')
 }
 
 const uri = process.env.MONGODB_URI
-const options = {
+const options: MongoClientOptions = {
   ssl: true,
   tls: true,
   tlsAllowInvalidCertificates: false,
   minPoolSize: 1,
   maxPoolSize: 10,
   retryWrites: true,
-  w: 'majority'
+  writeConcern: {
+    w: 1
+  }
 }
 
 let client
