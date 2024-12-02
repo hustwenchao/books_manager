@@ -6,14 +6,18 @@ if (!process.env.MONGODB_URI) {
 
 const uri = process.env.MONGODB_URI
 const options: MongoClientOptions = {
-  maxPoolSize: 10,
+  maxPoolSize: 1,
   minPoolSize: 1,
   retryWrites: true,
+  serverSelectionTimeoutMS: 30000,
+  socketTimeoutMS: 30000,
+  connectTimeoutMS: 30000,
   ssl: true,
-  connectTimeoutMS: 5000,
-  socketTimeoutMS: 5000,
-  serverSelectionTimeoutMS: 5000,
-  maxIdleTimeMS: 5000
+  tls: true,
+  replicaSet: 'atlas-9k2fcu-shard-0',
+  authMechanism: 'DEFAULT',
+  directConnection: false,
+  retryReads: true
 }
 
 let client: MongoClient | undefined
@@ -25,21 +29,47 @@ if (process.env.NODE_ENV === 'development') {
   }
 
   if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(uri, options)
-    globalWithMongo._mongoClientPromise = client.connect()
-      .catch((err) => {
-        console.error('Failed to connect to MongoDB:', err)
-        throw err
-      })
+    try {
+      client = new MongoClient(uri, options)
+      globalWithMongo._mongoClientPromise = client.connect()
+        .then(client => {
+          console.log('Successfully connected to MongoDB Atlas')
+          return client
+        })
+        .catch(err => {
+          console.error('MongoDB connection error:', {
+            message: err.message,
+            code: err.code,
+            name: err.name
+          })
+          throw err
+        })
+    } catch (err) {
+      console.error('Error creating MongoDB client:', err)
+      throw err
+    }
   }
   clientPromise = globalWithMongo._mongoClientPromise
 } else {
-  client = new MongoClient(uri, options)
-  clientPromise = client.connect()
-    .catch((err) => {
-      console.error('Failed to connect to MongoDB:', err)
-      throw err
-    })
+  try {
+    client = new MongoClient(uri, options)
+    clientPromise = client.connect()
+      .then(client => {
+        console.log('Successfully connected to MongoDB Atlas')
+        return client
+      })
+      .catch(err => {
+        console.error('MongoDB connection error:', {
+          message: err.message,
+          code: err.code,
+          name: err.name
+        })
+        throw err
+      })
+  } catch (err) {
+    console.error('Error creating MongoDB client:', err)
+    throw err
+  }
 }
 
 export default clientPromise

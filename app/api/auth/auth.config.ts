@@ -31,6 +31,11 @@ export const authOptions: NextAuthOptions = {
     GithubProvider({
       clientId: process.env.GITHUB_ID || "",
       clientSecret: process.env.GITHUB_SECRET || "",
+      authorization: {
+        params: {
+          scope: 'read:user user:email'
+        }
+      }
     }),
     GoogleProvider({
       clientId: process.env.GOOGLE_ID || "",
@@ -40,9 +45,9 @@ export const authOptions: NextAuthOptions = {
           prompt: "consent",
           access_type: "offline",
           response_type: "code"
-        },
-      },
-    }),
+        }
+      }
+    })
   ],
   session: {
     strategy: "jwt",
@@ -59,19 +64,19 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user, account }) {
-      if (account && user) {
-        token.accessToken = account.access_token;
-        token.userId = user.id;
+    async jwt({ token, account, profile }) {
+      if (account) {
+        token.accessToken = account.access_token
+        token.userId = profile?.id
       }
-      return token;
+      return token
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.accessToken = token.accessToken;
-        session.user.id = token.userId as string;
+      if (session?.user) {
+        session.accessToken = token.accessToken as string
+        session.user.id = token.userId as string
       }
-      return session;
-    },
+      return session
+    }
   },
 };
