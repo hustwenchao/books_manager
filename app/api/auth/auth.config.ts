@@ -25,6 +25,7 @@ declare module "next-auth/jwt" {
 }
 
 export const authOptions: NextAuthOptions = {
+  debug: process.env.NODE_ENV === 'development',
   secret: process.env.NEXTAUTH_SECRET,
   adapter: MongoDBAdapter(clientPromise),
   providers: [
@@ -55,14 +56,20 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    jwt({ token, user, account }) {
-      if (account) {
+    async signIn({ user }) {
+      if (!user?.email) {
+        return false;
+      }
+      return true;
+    },
+    async jwt({ token, user, account }) {
+      if (account && user) {
         token.accessToken = account.access_token;
-        token.userId = user?.id;
+        token.userId = user.id;
       }
       return token;
     },
-    session({ session, token }) {
+    async session({ session, token }) {
       if (session.user) {
         session.accessToken = token.accessToken;
         session.user.id = token.userId as string;
@@ -72,5 +79,6 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/auth/signin',
+    error: '/auth/error',
   },
 };
