@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '../../../../lib/mongodb';
 import { ObjectId } from 'mongodb';
-import { checkAuth } from '../../../../lib/auth';
+import { checkAdminAuth } from '../../../../lib/admin';
 
 export const dynamic = 'force-dynamic';
 
 export async function PUT(request: Request) {
     try {
-        // Check authentication
-        const authError = await checkAuth();
+        // Check admin authentication
+        const authError = await checkAdminAuth();
         if (authError) return authError;
 
         const body = await request.json();

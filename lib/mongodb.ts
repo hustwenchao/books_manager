@@ -5,18 +5,18 @@ if (!process.env.MONGODB_URI) {
 }
 
 const uri = process.env.MONGODB_URI
+console.log('Connecting to MongoDB with URI:', uri.replace(/:[^:]*@/, ':****@'))
+
 const options: MongoClientOptions = {
-  maxPoolSize: 1,
+  maxPoolSize: 10,
   minPoolSize: 1,
   retryWrites: true,
-  serverSelectionTimeoutMS: 30000,
+  serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 30000,
-  connectTimeoutMS: 30000,
-  ssl: true,
-  tls: true,
-  replicaSet: 'atlas-9k2fcu-shard-0',
-  authMechanism: 'DEFAULT',
-  directConnection: false,
+  connectTimeoutMS: 10000,
+  ssl: process.env.NODE_ENV === 'production',
+  tls: process.env.NODE_ENV === 'production',
+  directConnection: true,
   retryReads: true
 }
 
@@ -30,17 +30,27 @@ if (process.env.NODE_ENV === 'development') {
 
   if (!globalWithMongo._mongoClientPromise) {
     try {
+      console.log('Creating new MongoDB client...')
       client = new MongoClient(uri, options)
       globalWithMongo._mongoClientPromise = client.connect()
         .then(client => {
-          console.log('Successfully connected to MongoDB Atlas')
-          return client
+          console.log('Successfully connected to MongoDB')
+          return client.db().command({ ping: 1 })
+            .then(() => {
+              console.log('MongoDB ping successful')
+              return client
+            })
+            .catch(err => {
+              console.error('MongoDB ping failed:', err)
+              throw err
+            })
         })
         .catch(err => {
           console.error('MongoDB connection error:', {
             message: err.message,
             code: err.code,
-            name: err.name
+            name: err.name,
+            stack: err.stack
           })
           throw err
         })
@@ -48,21 +58,33 @@ if (process.env.NODE_ENV === 'development') {
       console.error('Error creating MongoDB client:', err)
       throw err
     }
+  } else {
+    console.log('Using existing MongoDB client')
   }
   clientPromise = globalWithMongo._mongoClientPromise
 } else {
   try {
+    console.log('Creating new MongoDB client (production)')
     client = new MongoClient(uri, options)
     clientPromise = client.connect()
       .then(client => {
-        console.log('Successfully connected to MongoDB Atlas')
-        return client
+        console.log('Successfully connected to MongoDB')
+        return client.db().command({ ping: 1 })
+          .then(() => {
+            console.log('MongoDB ping successful')
+            return client
+          })
+          .catch(err => {
+            console.error('MongoDB ping failed:', err)
+            throw err
+          })
       })
       .catch(err => {
         console.error('MongoDB connection error:', {
           message: err.message,
           code: err.code,
-          name: err.name
+          name: err.name,
+          stack: err.stack
         })
         throw err
       })
